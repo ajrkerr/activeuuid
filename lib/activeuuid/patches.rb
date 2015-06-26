@@ -138,6 +138,18 @@ module ActiveUUID
       end
     end
 
+    module PostgreSQLTableDefinition
+      def change_column_default_with_uuid(table_name, column_name, default)
+        column = column_for(table_name, column_name)
+        return super unless column && coloumn.type == :uuid
+
+        clear_cache!
+        execute "ALTER TABLE #{quote_table_name(table_name)} ALTER COLUMN #{quote_column_name(column_name)} SET DEFAULT #{default}"
+      end
+
+      alias_method_chain :change_column_default, :uuid
+    end
+
     module AbstractAdapter
       extend ActiveSupport::Concern
 
@@ -166,6 +178,10 @@ module ActiveUUID
       ActiveRecord::ConnectionAdapters::Mysql2Adapter.send :include, Quoting if defined? ActiveRecord::ConnectionAdapters::Mysql2Adapter
       ActiveRecord::ConnectionAdapters::SQLite3Adapter.send :include, Quoting if defined? ActiveRecord::ConnectionAdapters::SQLite3Adapter
       ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.send :include, PostgreSQLQuoting if defined? ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
+
+      if ActiveRecord::VERSION::MAJOR == 3 and ActiveRecord::VERSION::MINOR == 2
+        ActiveRecord::ConnectionAdapters::PostgreSQLAdapter::TableDefinition.send :include, PostgreSQLTableDefinition if defined? ActiveRecord::ConnectionAdapters::PostgreSQLAdapter::TableDefinition
+      end
     end
   end
 end
