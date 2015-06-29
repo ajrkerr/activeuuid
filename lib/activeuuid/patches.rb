@@ -143,12 +143,12 @@ module ActiveUUID
 
       included do
         def column_for(table_name, column_name)
-          columns(table_name).detect { |column| column.name == column_name }
+          columns(table_name).detect { |column| column.name.to_s == column_name.to_s }
         end
 
         def change_column_default_with_uuid(table_name, column_name, default)
           column = column_for(table_name, column_name)
-          return super unless column && coloumn.type == :uuid
+          return change_column_default_without_uuid(table_name, column_name, default) unless column && column.type == :uuid
 
           clear_cache!
           execute "ALTER TABLE #{quote_table_name(table_name)} ALTER COLUMN #{quote_column_name(column_name)} SET DEFAULT #{default}"
