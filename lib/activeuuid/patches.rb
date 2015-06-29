@@ -142,6 +142,10 @@ module ActiveUUID
       extend ActiveSupport::Concern
 
       included do
+        def column_for(table_name, column_name)
+          columns(table_name).detect { |column| column.name == column_name }
+        end
+
         def change_column_default_with_uuid(table_name, column_name, default)
           column = column_for(table_name, column_name)
           return super unless column && coloumn.type == :uuid
